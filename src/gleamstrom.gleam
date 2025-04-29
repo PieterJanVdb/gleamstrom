@@ -246,15 +246,8 @@ fn node_message_loop(actor_message: NodeMessage(a), actor_state: NodeState(a)) {
     IncomingMessage(msg_string) -> {
       case process_incoming_message(actor_state, msg_string) {
         Ok(new_actor_state) -> new_actor_state
-        Error(err) -> {
-          io.println_error(
-            "Error handling incoming msg ("
-            <> msg_string
-            <> "): "
-            <> string.inspect(err),
-          )
-          actor_state
-        }
+        // decode error, nothing to do here
+        Error(_) -> actor_state
       }
       |> actor.continue
     }
@@ -317,10 +310,6 @@ pub fn start_node(
   listen_to_stdin(node) |> Ok()
 }
 
-pub fn message(node node: Node(a), dest dest: String, body body: RPCBody) {
-  actor.send(node, OutgoingMessage(dest, body))
-}
-
 pub fn reply(
   node node: Node(a),
   dest dest: String,
@@ -345,6 +334,10 @@ pub fn error(
     #("text", json.string(text)),
   ]
   message(node:, dest:, body:)
+}
+
+pub fn message(node node: Node(a), dest dest: String, body body: RPCBody) {
+  actor.send(node, OutgoingMessage(dest, body))
 }
 
 pub fn request(
